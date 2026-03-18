@@ -49,6 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback((newToken: string, newUser: AuthUser) => {
     localStorage.setItem("stylohub_token", newToken);
     localStorage.setItem("stylohub_user", JSON.stringify(newUser));
+    // Cookie lido pelo middleware Edge para proteger /dashboard sem flash de redirecionamento
+    document.cookie = `stylohub_token=${newToken}; path=/; SameSite=Lax; Max-Age=604800`;
     setToken(newToken);
     setUser(newUser);
   }, []);
@@ -56,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem("stylohub_token");
     localStorage.removeItem("stylohub_user");
+    document.cookie = "stylohub_token=; path=/; Max-Age=0";
     setToken(null);
     setUser(null);
     router.push("/auth/login");

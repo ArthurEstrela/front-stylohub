@@ -68,8 +68,10 @@ export default function LinksPage() {
   const [formFields, setFormFields] = useState("email");
 
   const sensors = useSensors(
+    // Pointer (mouse/stylus): só arrasta após mover 8px — deixa cliques normais passarem
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    // Touch (mobile): exige segurar 250ms antes de ativar — scroll livre enquanto não segura
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
