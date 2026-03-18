@@ -9,6 +9,7 @@ import { useUpdateTheme } from "@/hooks/mutations/useUpdateTheme";
 import { creatorApi } from "@/lib/api";
 import { usePreviewStore } from "@/store/usePreviewStore";
 import { ColorPicker } from "@/components/dashboard/ColorPicker";
+import { GradientBuilder } from "@/components/dashboard/GradientBuilder";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { UpdateThemeRequest, BgType, ButtonStyle, ShadowStyle } from "@/types/profile";
@@ -19,6 +20,27 @@ const BG_TYPE_OPTIONS: { value: BgType; label: string }[] = [
   { value: "SOLID_COLOR", label: "Sólido" },
   { value: "GRADIENT",   label: "Gradiente" },
   { value: "IMAGE",      label: "Imagem" },
+];
+
+// Quick-apply full theme palettes
+interface ThemePalette {
+  name: string;
+  bg: string;
+  primary: string;
+  text: string;
+  buttonStyle: ButtonStyle;
+  preview: string; // gradient or solid CSS for the swatch
+}
+
+const QUICK_PALETTES: ThemePalette[] = [
+  { name: "Dark Gold",     bg: "#09090B", primary: "#D4AF37", text: "#FFFFFF", buttonStyle: "ROUNDED",  preview: "linear-gradient(135deg, #09090B 60%, #D4AF3740)" },
+  { name: "Pure White",    bg: "#F5F5F5", primary: "#111111", text: "#F5F5F5", buttonStyle: "PILL",     preview: "linear-gradient(135deg, #F5F5F5 60%, #11111130)" },
+  { name: "Ocean Blue",    bg: "#0A0E1A", primary: "#4A9EFF", text: "#FFFFFF", buttonStyle: "ROUNDED",  preview: "linear-gradient(135deg, #0A0E1A 40%, #4A9EFF50)" },
+  { name: "Rose Gold",     bg: "#1A0A0F", primary: "#FF6B8A", text: "#FFFFFF", buttonStyle: "PILL",     preview: "linear-gradient(135deg, #1A0A0F 40%, #FF6B8A50)" },
+  { name: "Neon Purple",   bg: "#0D0A1A", primary: "#9B6BFF", text: "#FFFFFF", buttonStyle: "ROUNDED",  preview: "linear-gradient(135deg, #0D0A1A 40%, #9B6BFF50)" },
+  { name: "Forest",        bg: "#071A0F", primary: "#3DDB82", text: "#FFFFFF", buttonStyle: "SQUARED",  preview: "linear-gradient(135deg, #071A0F 40%, #3DDB8250)" },
+  { name: "Sunset Grad",   bg: "linear-gradient(135deg, #1A0505, #1A0A05)", primary: "#FF6B35", text: "#FFFFFF", buttonStyle: "PILL", preview: "linear-gradient(135deg, #F83600, #F9D423)" },
+  { name: "Cósmico",       bg: "linear-gradient(180deg, #0F0C29, #302B63)", primary: "#A78BFF", text: "#FFFFFF", buttonStyle: "ROUNDED", preview: "linear-gradient(180deg, #0F0C29, #302B63)" },
 ];
 
 const BUTTON_STYLE_OPTIONS: {
@@ -85,6 +107,26 @@ export default function AppearancePage() {
 
   const isPro = profile?.plan === "PRO";
 
+  // Apply a full quick-palette in one click
+  const applyPalette = (p: ThemePalette) => {
+    const isGradient = p.bg.startsWith("linear-gradient");
+    const newBgType: BgType = isGradient ? "GRADIENT" : "SOLID_COLOR";
+    setBgType(newBgType);
+    setBgValue(p.bg);
+    setPrimaryColor(p.primary);
+    setTextColor(p.text);
+    setButtonStyle(p.buttonStyle);
+    setBorderColor(p.primary);
+    updateThemePreview({
+      bgType: newBgType,
+      bgValue: p.bg,
+      primaryColor: p.primary,
+      textColor: p.text,
+      buttonStyle: p.buttonStyle,
+      borderColor: p.primary,
+    });
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -131,6 +173,38 @@ export default function AppearancePage() {
         <h1 className="text-2xl font-bold text-white">Aparência</h1>
         <p className="text-white/40 text-sm mt-0.5">Personalize o visual da sua página.</p>
       </div>
+
+      {/* Quick Palettes */}
+      <section className="bg-stylo-surface border border-white/10 rounded-2xl p-6 space-y-4">
+        <div>
+          <h2 className="text-white font-semibold">Paletas rápidas</h2>
+          <p className="text-white/40 text-xs mt-0.5">Clique para aplicar um tema completo de uma vez.</p>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {QUICK_PALETTES.map((p) => (
+            <button
+              key={p.name}
+              type="button"
+              onClick={() => applyPalette(p)}
+              title={p.name}
+              className="group relative flex flex-col items-center gap-1.5"
+            >
+              {/* Swatch */}
+              <div
+                className="relative w-full h-12 rounded-xl border-2 border-white/10 group-hover:border-stylo-gold/50 transition-all group-hover:scale-105"
+                style={{ background: p.preview }}
+              >
+                {/* Mini button preview dot */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-2 rounded-full opacity-90"
+                  style={{ backgroundColor: p.primary }} />
+              </div>
+              <span className="text-white/40 text-[10px] text-center group-hover:text-white/70 transition-colors leading-tight">
+                {p.name}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Avatar */}
       <section className="bg-stylo-surface border border-white/10 rounded-2xl p-6">
@@ -195,16 +269,10 @@ export default function AppearancePage() {
           />
         )}
         {bgType === "GRADIENT" && (
-          <div className="space-y-1.5">
-            <Label className="text-white/70 text-sm">CSS do gradiente</Label>
-            <input
-              type="text"
-              value={bgValue}
-              onChange={(e) => { setBgValue(e.target.value); updateThemePreview({ bgValue: e.target.value }); }}
-              placeholder="linear-gradient(135deg, #09090B 0%, #1a1a2e 100%)"
-              className="w-full bg-stylo-dark border border-white/10 rounded-md px-3 py-2 text-white text-sm placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-stylo-gold"
-            />
-          </div>
+          <GradientBuilder
+            value={bgValue}
+            onChange={(css) => { setBgValue(css); updateThemePreview({ bgValue: css }); }}
+          />
         )}
         {bgType === "IMAGE" && (
           <div className="space-y-1.5">
