@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { Plus, Link2, Youtube, Music2 } from "lucide-react";
+import { Plus, Link2, Youtube, Music2, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 
 import { useProfile } from "@/hooks/queries/useProfile";
@@ -51,6 +51,12 @@ export default function LinksPage() {
   const [linkUrl, setLinkUrl] = useState("");
   const [videoId, setVideoId] = useState("");
   const [spotifyUri, setSpotifyUri] = useState("");
+
+  // Lead form state
+  const [formTitle, setFormTitle] = useState("");
+  const [formButtonLabel, setFormButtonLabel] = useState("");
+  const [formSuccessMessage, setFormSuccessMessage] = useState("");
+  const [formFields, setFormFields] = useState("email");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -146,6 +152,44 @@ export default function LinksPage() {
       toast.success("Spotify adicionado!");
     } catch {
       toast.error("Erro ao adicionar Spotify.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddForm = async () => {
+    if (!formTitle.trim()) {
+      toast.error("Informe o título do formulário.");
+      return;
+    }
+    const fields = formFields
+      .split(",")
+      .map((f) => f.trim())
+      .filter(Boolean);
+    if (fields.length === 0) {
+      toast.error("Informe ao menos um campo.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "LEAD_FORM",
+        order: sortedWidgets.length,
+        title: formTitle.trim(),
+        buttonLabel: formButtonLabel.trim() || "Enviar",
+        successMessage: formSuccessMessage.trim() || "Obrigado! Entraremos em contato.",
+        formFields: fields,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setFormTitle("");
+      setFormButtonLabel("");
+      setFormSuccessMessage("");
+      setFormFields("email");
+      toast.success("Formulário adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar formulário.");
     } finally {
       setIsAdding(false);
     }
@@ -254,6 +298,10 @@ export default function LinksPage() {
                 <Music2 size={14} className="mr-1.5" />
                 Spotify
               </TabsTrigger>
+              <TabsTrigger value="form" className="flex-1 data-[state=active]:bg-stylo-gold/20 data-[state=active]:text-stylo-gold">
+                <ClipboardList size={14} className="mr-1.5" />
+                Form
+              </TabsTrigger>
             </TabsList>
 
             {/* Link tab */}
@@ -329,6 +377,53 @@ export default function LinksPage() {
                 className="w-full btn-gold-glow bg-stylo-gold hover:bg-stylo-gold-hover text-black font-semibold"
               >
                 {isAdding ? "Adicionando..." : "Adicionar Spotify"}
+              </Button>
+            </TabsContent>
+            {/* Lead Form tab */}
+            <TabsContent value="form" className="space-y-4 pt-4">
+              <div className="space-y-1.5">
+                <Label className="text-white/70 text-sm">Título do formulário</Label>
+                <Input
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                  placeholder="Ex: Receba meu e-book grátis"
+                  className="bg-stylo-dark border-white/10 text-white placeholder:text-white/30 focus-visible:ring-stylo-gold"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-white/70 text-sm">Campos (separados por vírgula)</Label>
+                <Input
+                  value={formFields}
+                  onChange={(e) => setFormFields(e.target.value)}
+                  placeholder="email, nome, telefone"
+                  className="bg-stylo-dark border-white/10 text-white placeholder:text-white/30 focus-visible:ring-stylo-gold"
+                />
+                <p className="text-white/30 text-xs">O campo "email" é obrigatório para captura de leads.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-white/70 text-sm">Texto do botão</Label>
+                <Input
+                  value={formButtonLabel}
+                  onChange={(e) => setFormButtonLabel(e.target.value)}
+                  placeholder="Enviar (padrão)"
+                  className="bg-stylo-dark border-white/10 text-white placeholder:text-white/30 focus-visible:ring-stylo-gold"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-white/70 text-sm">Mensagem de sucesso</Label>
+                <Input
+                  value={formSuccessMessage}
+                  onChange={(e) => setFormSuccessMessage(e.target.value)}
+                  placeholder="Obrigado! Entraremos em contato."
+                  className="bg-stylo-dark border-white/10 text-white placeholder:text-white/30 focus-visible:ring-stylo-gold"
+                />
+              </div>
+              <Button
+                onClick={handleAddForm}
+                disabled={isAdding}
+                className="w-full btn-gold-glow bg-stylo-gold hover:bg-stylo-gold-hover text-black font-semibold"
+              >
+                {isAdding ? "Adicionando..." : "Adicionar formulário"}
               </Button>
             </TabsContent>
           </Tabs>

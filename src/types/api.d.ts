@@ -39,3 +39,12 @@ export interface CheckoutResponse {
 export interface ImageUploadResponse {
   url: string;
 }
+
+export interface LeadDTO {
+  id: string;
+  widgetId: string;
+  widgetTitle: string;
+  email: string;
+  fields: Record<string, string>;
+  capturedAt: string;
+}

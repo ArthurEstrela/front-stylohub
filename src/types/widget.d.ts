@@ -3,7 +3,7 @@ export type WidgetType =
   | "VIDEO"
   | "SPOTIFY"
   | "IMAGE"
-  | "FORM"
+  | "LEAD_FORM"
   | "TEXT";
 
 export interface Widget {

@@ -8,6 +8,7 @@ import type { Widget } from "@/types/widget";
 import { ThemeRenderer } from "@/components/public-profile/ThemeRenderer";
 import { LinkWidget } from "@/components/public-profile/LinkWidget";
 import { YoutubeWidget } from "@/components/public-profile/YoutubeWidget";
+import { LeadFormWidget } from "@/components/public-profile/LeadFormWidget";
 import { PoweredByFooter } from "@/components/public-profile/PoweredByFooter";
 
 // ─── Dynamic metadata ────────────────────────────────────────────────────────
@@ -117,6 +118,15 @@ export default async function PublicProfilePage({
                       className="border-0 rounded-xl"
                     />
                   </div>
+                );
+              }
+              if (widget.type === "LEAD_FORM") {
+                return (
+                  <LeadFormWidget
+                    key={widget.id}
+                    widget={widget}
+                    username={profile.username}
+                  />
                 );
               }
               if (widget.type === "TEXT" && widget.config.text) {

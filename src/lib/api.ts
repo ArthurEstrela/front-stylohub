@@ -66,6 +66,8 @@ export const creatorApi = {
   },
   getAnalytics: () => api.get("/api/creator/analytics"),
   createCheckout: () => api.post("/api/creator/subscription/checkout"),
+  getLeads: () => api.get("/api/creator/profile/leads"),
+  deleteLead: (leadId: string) => api.delete(`/api/creator/profile/leads/${leadId}`),
 };
 
 // ── Public Profile ───────────────────────────────────────────
@@ -73,4 +75,6 @@ export const publicApi = {
   getProfile: (username: string) => api.get(`/api/p/${username}`),
   trackClick: (username: string, widgetId: string) =>
     api.post(`/api/p/${username}/widgets/${widgetId}/click`),
+  submitLead: (username: string, widgetId: string, fields: Record<string, string>) =>
+    api.post(`/api/p/${username}/leads`, { widgetId, fields }),
 };
