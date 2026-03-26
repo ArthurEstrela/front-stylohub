@@ -21,8 +21,8 @@ export async function generateMetadata({
   try {
     const res = await publicApi.getProfile(username);
     const profile: Profile = res.data;
-    const title = `@${profile.username} | Stylohub`;
-    const description = `Todos os links de @${profile.username} em um só lugar. Acessa agora!`;
+    const title = profile.seoTitle || `@${profile.username} | Stylohub`;
+    const description = profile.seoDescription || profile.bio || `Todos os links de @${profile.username} em um só lugar. Acessa agora!`;
     const imageUrl = profile.avatarUrl ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}&background=D4AF37&color=000&size=400&bold=true`;
     return {
       title,
@@ -77,21 +77,21 @@ export default async function PublicProfilePage({
       <main className="min-h-screen flex flex-col items-center pt-12 pb-10 px-4">
         <div className="w-full max-w-sm">
           {/* Avatar */}
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-5">
             {profile.avatarUrl ? (
               <img
                 src={profile.avatarUrl}
                 alt={`@${profile.username}`}
-                width={80}
-                height={80}
-                className="w-20 h-20 rounded-full object-cover border-2"
-                style={{ borderColor: `${profile.theme.primaryColor}60` }}
+                width={112}
+                height={112}
+                className="w-28 h-28 rounded-full object-cover border-[3px]"
+                style={{ borderColor: `${profile.theme.primaryColor}70` }}
               />
             ) : (
               <div
-                className="w-20 h-20 rounded-full border-2 flex items-center justify-center text-2xl font-bold"
+                className="w-28 h-28 rounded-full border-[3px] flex items-center justify-center text-3xl font-bold"
                 style={{
-                  borderColor: `${profile.theme.primaryColor}60`,
+                  borderColor: `${profile.theme.primaryColor}70`,
                   backgroundColor: `${profile.theme.primaryColor}20`,
                   color: profile.theme.primaryColor,
                 }}
@@ -109,6 +109,14 @@ export default async function PublicProfilePage({
             >
               @{profile.username}
             </h1>
+            {profile.bio && (
+              <p
+                className="text-sm leading-snug opacity-70 max-w-xs mx-auto"
+                style={{ color: profile.theme.textColor }}
+              >
+                {profile.bio}
+              </p>
+            )}
           </div>
 
           {/* Widgets */}

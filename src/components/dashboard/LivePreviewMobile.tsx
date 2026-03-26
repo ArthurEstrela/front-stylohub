@@ -126,12 +126,16 @@ export function LivePreviewMobile() {
             <div className="relative z-10 w-full flex flex-col items-center px-4 pt-2">
               {/* Avatar */}
               <div
-                className="w-12 h-12 rounded-full mb-2 flex items-center justify-center border-2"
+                className="w-12 h-12 rounded-full mb-2 flex items-center justify-center border-2 overflow-hidden shrink-0"
                 style={{ borderColor: `${theme.primaryColor}60`, backgroundColor: `${theme.primaryColor}20` }}
               >
-                <span style={{ color: theme.primaryColor }} className="text-base font-bold">
-                  {profile?.username?.charAt(0).toUpperCase() ?? "S"}
-                </span>
+                {profile?.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span style={{ color: theme.primaryColor }} className="text-base font-bold">
+                    {profile?.username?.charAt(0).toUpperCase() ?? "S"}
+                  </span>
+                )}
               </div>
 
               {/* Username */}

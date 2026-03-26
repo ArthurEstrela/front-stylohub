@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Loader2, Camera, User, Lock, Crown, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -96,7 +96,12 @@ export default function AppearancePage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatarUrl ?? null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Sync when React Query resolves the profile (profile is undefined on first render)
+  useEffect(() => {
+    if (profile?.avatarUrl) setAvatarUrl(profile.avatarUrl);
+  }, [profile?.avatarUrl]);
   const [isDragOver, setIsDragOver] = useState(false);
 
   // Upgrade modal

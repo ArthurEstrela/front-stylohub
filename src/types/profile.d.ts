@@ -21,6 +21,9 @@ export interface Profile {
   id: string;
   username: string;
   avatarUrl?: string;
+  bio?: string;
+  seoTitle?: string;
+  seoDescription?: string;
   theme: Theme;
   plan: Plan;
   widgets: Widget[];
