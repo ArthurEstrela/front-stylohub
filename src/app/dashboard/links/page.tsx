@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { Plus, Link2, Youtube, Music2, ClipboardList } from "lucide-react";
+import { Plus, Link2, Youtube, Music2, ClipboardList, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -37,13 +37,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type ContentType = "link" | "youtube" | "spotify" | "form";
+type ContentType = "link" | "youtube" | "spotify" | "whatsapp" | "form";
 
 const CONTENT_TYPES: { id: ContentType; label: string; icon: React.ReactNode; color: string }[] = [
-  { id: "link",    label: "Link",     icon: <Link2 size={20} />,        color: "#3B82F6" },
-  { id: "youtube", label: "YouTube",  icon: <Youtube size={20} />,      color: "#EF4444" },
-  { id: "spotify", label: "Spotify",  icon: <Music2 size={20} />,       color: "#22C55E" },
-  { id: "form",    label: "Form",     icon: <ClipboardList size={20} />, color: "#D4AF37" },
+  { id: "link",      label: "Link",       icon: <Link2 size={18} />,         color: "#3B82F6" },
+  { id: "youtube",   label: "YouTube",    icon: <Youtube size={18} />,       color: "#EF4444" },
+  { id: "spotify",   label: "Spotify",    icon: <Music2 size={18} />,        color: "#22C55E" },
+  { id: "whatsapp",  label: "WhatsApp",   icon: <MessageCircle size={18} />, color: "#25D366" },
+  { id: "form",      label: "Form",       icon: <ClipboardList size={18} />, color: "#D4AF37" },
 ];
 
 export default function LinksPage() {
@@ -61,6 +62,11 @@ export default function LinksPage() {
   const [linkUrl, setLinkUrl] = useState("");
   const [videoId, setVideoId] = useState("");
   const [spotifyUri, setSpotifyUri] = useState("");
+
+  // WhatsApp state
+  const [waPhone, setWaPhone] = useState("");
+  const [waMessage, setWaMessage] = useState("");
+  const [waTitle, setWaTitle] = useState("");
 
   // Lead form state
   const [formTitle, setFormTitle] = useState("");
@@ -164,6 +170,37 @@ export default function LinksPage() {
       toast.success("Spotify adicionado!");
     } catch {
       toast.error("Erro ao adicionar Spotify.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddWhatsApp = async () => {
+    const digits = waPhone.replace(/\D/g, "");
+    if (digits.length < 8) {
+      toast.error("Informe um número válido com DDD e DDI.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const url = waMessage.trim()
+        ? `https://wa.me/${digits}?text=${encodeURIComponent(waMessage.trim())}`
+        : `https://wa.me/${digits}`;
+      const res = await creatorApi.addWidget({
+        type: "LINK",
+        order: sortedWidgets.length,
+        title: waTitle.trim() || "WhatsApp",
+        url,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setWaPhone("");
+      setWaMessage("");
+      setWaTitle("");
+      toast.success("WhatsApp adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar WhatsApp.");
     } finally {
       setIsAdding(false);
     }
@@ -307,7 +344,7 @@ export default function LinksPage() {
           </DialogHeader>
 
           {/* Type selector grid */}
-          <div className="grid grid-cols-4 gap-2 px-5 pt-4">
+          <div className="grid grid-cols-5 gap-1.5 px-5 pt-4">
             {CONTENT_TYPES.map((ct) => {
               const isActive = activeType === ct.id;
               return (
@@ -395,6 +432,50 @@ export default function LinksPage() {
                 </div>
                 <Button onClick={handleAddSpotify} disabled={isAdding} className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white font-semibold h-10 mt-1">
                   {isAdding ? "Adicionando..." : "Adicionar Spotify"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "whatsapp" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Número (com DDI e DDD)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35 text-sm font-mono">+</span>
+                    <Input
+                      value={waPhone}
+                      onChange={(e) => setWaPhone(e.target.value)}
+                      placeholder="55 11 99999-9999"
+                      type="tel"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#25D366] focus-visible:border-[#25D366]/50 h-10 pl-6"
+                    />
+                  </div>
+                  <p className="text-white/35 text-xs">Ex: 5511999999999 — código do país + DDD + número</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">
+                    Mensagem automática <span className="normal-case text-white/35">(opcional)</span>
+                  </Label>
+                  <Input
+                    value={waMessage}
+                    onChange={(e) => setWaMessage(e.target.value)}
+                    placeholder="Olá! Vim pelo seu link..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#25D366] focus-visible:border-[#25D366]/50 h-10"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">
+                    Título do botão <span className="normal-case text-white/35">(padrão: WhatsApp)</span>
+                  </Label>
+                  <Input
+                    value={waTitle}
+                    onChange={(e) => setWaTitle(e.target.value)}
+                    placeholder="WhatsApp"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#25D366] focus-visible:border-[#25D366]/50 h-10"
+                  />
+                </div>
+                <Button onClick={handleAddWhatsApp} disabled={isAdding} className="w-full font-semibold h-10 mt-1 text-white" style={{ background: "#25D366" }}>
+                  {isAdding ? "Adicionando..." : "Adicionar WhatsApp"}
                 </Button>
               </>
             )}
