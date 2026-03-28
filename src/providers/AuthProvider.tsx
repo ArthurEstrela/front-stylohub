@@ -8,6 +8,7 @@ import {
   useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
+import { authApi } from "@/lib/api";
 
 interface AuthUser {
   username: string;
@@ -16,15 +17,13 @@ interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  token: string | null;
   isLoading: boolean;
-  login: (token: string, user: AuthUser) => void;
+  login: (user: AuthUser) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
-  token: null,
   isLoading: true,
   login: () => {},
   logout: () => {},
@@ -32,40 +31,32 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("stylohub_token");
     const storedUser = localStorage.getItem("stylohub_user");
-    if (storedToken && storedUser) {
-      setToken(storedToken);
+    if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
     setIsLoading(false);
   }, []);
 
-  const login = useCallback((newToken: string, newUser: AuthUser) => {
-    localStorage.setItem("stylohub_token", newToken);
+  const login = useCallback((newUser: AuthUser) => {
     localStorage.setItem("stylohub_user", JSON.stringify(newUser));
-    // Cookie lido pelo middleware Edge para proteger /dashboard sem flash de redirecionamento
-    document.cookie = `stylohub_token=${newToken}; path=/; SameSite=Lax; Max-Age=604800`;
-    setToken(newToken);
     setUser(newUser);
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("stylohub_token");
     localStorage.removeItem("stylohub_user");
-    document.cookie = "stylohub_token=; path=/; Max-Age=0";
-    setToken(null);
     setUser(null);
+    // Limpa o cookie httpOnly no backend (fire-and-forget)
+    authApi.logout().catch(() => {});
     router.push("/auth/login");
   }, [router]);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

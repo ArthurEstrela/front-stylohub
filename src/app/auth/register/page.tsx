@@ -50,8 +50,7 @@ function RegisterForm() {
         password: values.password,
         username: values.username,
       });
-      const { accessToken } = res.data;
-      login(accessToken, { username: values.username, email: values.email });
+      login({ username: res.data.username, email: res.data.email });
       toast.success("Conta criada com sucesso!");
       router.push("/onboarding/profile");
     } catch (err: unknown) {

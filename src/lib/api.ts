@@ -5,25 +5,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 export const api = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
+  withCredentials: true, // envia o cookie httpOnly automaticamente em toda requisição
 });
 
-// Attach JWT on every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("stylohub_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-// Auto-logout on 401
+// Auto-logout em 401
 api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined") {
-      localStorage.removeItem("stylohub_token");
       localStorage.removeItem("stylohub_user");
       window.location.href = "/auth/login";
     }
@@ -37,6 +26,7 @@ export const authApi = {
     api.post("/api/auth/register", body),
   login: (body: { email: string; password: string }) =>
     api.post("/api/auth/login", body),
+  logout: () => api.post("/api/auth/logout"),
   forgotPassword: (email: string) =>
     api.post("/api/auth/forgot-password", { email }),
   resetPassword: (token: string, newPassword: string) =>

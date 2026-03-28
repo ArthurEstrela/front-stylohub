@@ -23,19 +23,19 @@ const MOBILE_NAV = [
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { token, user, logout, isLoading: authLoading } = useAuth();
+  const { user, logout, isLoading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const setProfile = usePreviewStore((s) => s.setProfile);
 
   useEffect(() => {
-    if (!authLoading && !token) router.replace("/auth/login");
-  }, [authLoading, token, router]);
+    if (!authLoading && !user) router.replace("/auth/login");
+  }, [authLoading, user, router]);
 
   useEffect(() => {
     if (profile) setProfile(profile);
   }, [profile, setProfile]);
 
-  if (authLoading || (!token && !authLoading)) {
+  if (authLoading || (!user && !authLoading)) {
     return (
       <div className="min-h-screen bg-stylo-dark flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-stylo-gold border-t-transparent rounded-full animate-spin" />

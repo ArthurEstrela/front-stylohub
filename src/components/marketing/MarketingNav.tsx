@@ -5,9 +5,9 @@ import { LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/providers/AuthProvider";
 
 export function MarketingNav() {
-  const { token } = useAuth();
+  const { user } = useAuth();
 
-  if (token) {
+  if (user) {
     return (
       <>
         {/* Desktop */}
