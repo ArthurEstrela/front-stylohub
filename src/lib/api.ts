@@ -8,13 +8,42 @@ export const api = axios.create({
   withCredentials: true, // envia o cookie httpOnly automaticamente em toda requisição
 });
 
-// Auto-logout em 401
+// Silent refresh on 401: try /api/auth/refresh once, then logout
+let isRefreshing = false;
+let pendingQueue: Array<{ resolve: () => void; reject: (e: unknown) => void }> = [];
+
 api.interceptors.response.use(
   (res) => res,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
-      localStorage.removeItem("stylohub_user");
-      window.location.href = "/auth/login";
+  async (error) => {
+    const original = error.config;
+    if (
+      error.response?.status === 401 &&
+      !original._retry &&
+      !original.url?.includes("/api/auth/")
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          pendingQueue.push({ resolve, reject });
+        }).then(() => api(original));
+      }
+      original._retry = true;
+      isRefreshing = true;
+      try {
+        await api.post("/api/auth/refresh");
+        pendingQueue.forEach((p) => p.resolve());
+        pendingQueue = [];
+        return api(original);
+      } catch {
+        pendingQueue.forEach((p) => p.reject(error));
+        pendingQueue = [];
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("stylohub_user");
+          window.location.href = "/auth/login";
+        }
+        return Promise.reject(error);
+      } finally {
+        isRefreshing = false;
+      }
     }
     return Promise.reject(error);
   }
