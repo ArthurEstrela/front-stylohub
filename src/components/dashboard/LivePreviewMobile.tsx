@@ -113,6 +113,35 @@ function MockWidget({ widget, theme }: { widget: Widget; theme: Theme }) {
     );
   }
 
+  if (widget.type === "DONATION_LINK") {
+    const { config } = widget;
+    const label = config.title || (config.platform === "KOFI" ? "Ko-fi" : config.platform === "BUYMEACOFFEE" ? "Buy Me a Coffee" : config.platform === "PAYPAL" ? "PayPal" : "Doação");
+    const bg = config.platform === "KOFI" ? "#29abe0" : config.platform === "BUYMEACOFFEE" ? "#FFDD00" : config.platform === "PAYPAL" ? "#0070ba" : "#D4AF37";
+    const textColor = config.platform === "BUYMEACOFFEE" ? "#000" : "#fff";
+    return (
+      <div className="w-full rounded-lg px-4 py-2.5 text-center text-sm font-semibold" style={{ backgroundColor: bg, color: textColor }}>
+        ❤️ {label}
+      </div>
+    );
+  }
+
+  if (widget.type === "PIX") {
+    return (
+      <div className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm font-semibold text-white">
+        <span style={{ color: "#32BCAD" }}>⚡</span> {widget.config.title || "Chave PIX"}
+      </div>
+    );
+  }
+
+  if (widget.type === "AFFILIATE_LINK") {
+    return (
+      <div className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 flex items-center justify-between text-sm font-semibold text-white">
+        <span>{widget.config.title || "Afiliado"}</span>
+        <span className="text-xs text-[#8B5CF6]">↗ Afiliado</span>
+      </div>
+    );
+  }
+
   return null;
 }
 

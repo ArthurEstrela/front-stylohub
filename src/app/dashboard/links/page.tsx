@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { Plus, Link2, Youtube, Music2, ClipboardList, MessageCircle } from "lucide-react";
+import { Plus, Link2, Youtube, Music2, ClipboardList, MessageCircle, Heart, Zap, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -43,7 +43,7 @@ import {
   extractTweetId,
 } from "@/lib/embed-extractors";
 
-type ContentType = "link" | "youtube" | "spotify" | "whatsapp" | "form" | "tiktok" | "twitch" | "soundcloud" | "twitter";
+type ContentType = "link" | "youtube" | "spotify" | "whatsapp" | "form" | "tiktok" | "twitch" | "soundcloud" | "twitter" | "donation" | "pix" | "affiliate";
 
 const CONTENT_TYPES: { id: ContentType; label: string; icon: React.ReactNode; color: string }[] = [
   { id: "link",      label: "Link",       icon: <Link2 size={18} />,         color: "#3B82F6" },
@@ -55,6 +55,9 @@ const CONTENT_TYPES: { id: ContentType; label: string; icon: React.ReactNode; co
   { id: "twitch",     label: "Twitch",      icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>, color: "#9146FF" },
   { id: "soundcloud", label: "SoundCloud",  icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M1.175 12.225c-.017 0-.033.002-.05.003a.427.427 0 00-.372.287l-.48 1.485.48 1.482c.04.14.168.24.323.24.155 0 .283-.1.323-.24l.543-1.482-.543-1.485a.338.338 0 00-.224-.29zm1.797-.578c-.024 0-.05.003-.073.01a.46.46 0 00-.37.33l-.41 1.76.41 1.755a.456.456 0 00.443.345.456.456 0 00.444-.345l.465-1.755-.465-1.76a.462.462 0 00-.444-.34zm1.87-.164a.55.55 0 00-.548.478l-.35 1.924.35 1.92a.55.55 0 001.096 0l.397-1.92-.397-1.924a.55.55 0 00-.548-.478zm1.898.023a.64.64 0 00-.637.559l-.298 1.9.298 1.896a.636.636 0 001.272 0l.337-1.896-.337-1.9a.637.637 0 00-.635-.559zm1.91-.398a.723.723 0 00-.723.636l-.253 2.298.253 2.3a.724.724 0 001.447 0l.286-2.3-.286-2.298a.724.724 0 00-.724-.636zm5.517 1.88c-.197-2.267-2.046-4.026-4.327-4.026a4.376 4.376 0 00-1.61.308.723.723 0 00-.485.68v7.796c0 .394.32.714.714.714h5.708a2.145 2.145 0 002.143-2.143 2.145 2.145 0 00-2.143-2.143zm2.572 0a.714.714 0 100 1.429.714.714 0 000-1.429z"/></svg>, color: "#FF5500" },
   { id: "twitter",    label: "Twitter/X",   icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.633zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>, color: "#000000" },
+  { id: "donation",   label: "Doação",   icon: <Heart size={18} />,       color: "#FF5E5B" },
+  { id: "pix",        label: "PIX",      icon: <Zap size={18} />,         color: "#32BCAD" },
+  { id: "affiliate",  label: "Afiliado", icon: <ExternalLink size={18} />, color: "#8B5CF6" },
 ];
 
 export default function LinksPage() {
@@ -99,6 +102,21 @@ export default function LinksPage() {
   // Twitter state
   const [twitterUrl, setTwitterUrl] = useState("");
   const [tweetIdDetected, setTweetIdDetected] = useState<string | null>(null);
+
+  // Donation state
+  const [donationPlatform, setDonationPlatform] = useState<"KOFI" | "BUYMEACOFFEE" | "PAYPAL" | "OUTRO">("KOFI");
+  const [donationUrl, setDonationUrl] = useState("");
+  const [donationTitle, setDonationTitle] = useState("");
+
+  // PIX state
+  const [pixKey, setPixKey] = useState("");
+  const [pixKeyType, setPixKeyType] = useState<"CPF" | "CNPJ" | "EMAIL" | "TELEFONE" | "ALEATORIA">("EMAIL");
+  const [pixTitle, setPixTitle] = useState("");
+  const [pixDescription, setPixDescription] = useState("");
+
+  // Affiliate state
+  const [affiliateUrl, setAffiliateUrl] = useState("");
+  const [affiliateTitle, setAffiliateTitle] = useState("");
 
   const sensors = useSensors(
     // Pointer (mouse/stylus): só arrasta após mover 8px — deixa cliques normais passarem
@@ -371,6 +389,89 @@ export default function LinksPage() {
     }
   };
 
+  const handleAddDonation = async () => {
+    if (!donationUrl.trim()) {
+      toast.error("Informe a URL de doação.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "DONATION_LINK",
+        order: sortedWidgets.length,
+        donationPlatform,
+        url: donationUrl.trim(),
+        title: donationTitle.trim() || undefined,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setDonationUrl("");
+      setDonationTitle("");
+      setDonationPlatform("KOFI");
+      toast.success("Doação adicionada!");
+    } catch {
+      toast.error("Erro ao adicionar doação.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddPix = async () => {
+    if (!pixKey.trim()) {
+      toast.error("Informe a chave PIX.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "PIX",
+        order: sortedWidgets.length,
+        pixKey: pixKey.trim(),
+        pixKeyType,
+        title: pixTitle.trim() || undefined,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setPixKey("");
+      setPixTitle("");
+      setPixDescription("");
+      toast.success("PIX adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar PIX.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddAffiliate = async () => {
+    if (!affiliateUrl.trim() || !affiliateTitle.trim()) {
+      toast.error("Preencha URL e título.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "AFFILIATE_LINK",
+        order: sortedWidgets.length,
+        url: affiliateUrl.trim(),
+        title: affiliateTitle.trim(),
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setAffiliateUrl("");
+      setAffiliateTitle("");
+      toast.success("Afiliado adicionado!");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "";
+      toast.error(msg.includes("PRO") ? "Recurso exclusivo do plano PRO 🔒" : "Erro ao adicionar afiliado.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const handleUpdate = async (id: string, data: { title?: string; url?: string }) => {
     try {
       await creatorApi.updateWidget(id, data);
@@ -472,6 +573,9 @@ export default function LinksPage() {
           setTwitchUrl(""); setTwitchInfoDetected(null);
           setSoundCloudUrl(""); setSoundCloudDetected(null);
           setTwitterUrl(""); setTweetIdDetected(null);
+          setDonationUrl(""); setDonationTitle(""); setDonationPlatform("KOFI");
+          setPixKey(""); setPixTitle(""); setPixDescription("");
+          setAffiliateUrl(""); setAffiliateTitle("");
         }
       }}>
         <DialogContent className="bg-[#111113] border border-white/10 text-white w-[calc(100vw-2rem)] max-w-md mx-auto p-0 overflow-hidden rounded-2xl">
@@ -764,6 +868,116 @@ export default function LinksPage() {
                 </div>
                 <Button onClick={handleAddTwitter} disabled={isAdding || !tweetIdDetected} className="w-full font-semibold h-10 mt-1 text-white bg-black hover:bg-zinc-900">
                   {isAdding ? "Adicionando..." : "Adicionar Tweet"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "donation" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Plataforma</Label>
+                  <select
+                    value={donationPlatform}
+                    onChange={(e) => setDonationPlatform(e.target.value as typeof donationPlatform)}
+                    className="w-full h-10 rounded-md bg-white/5 border border-white/10 text-white text-sm px-3 focus:outline-none focus:ring-1 focus:ring-[#FF5E5B]"
+                  >
+                    <option value="KOFI">Ko-fi</option>
+                    <option value="BUYMEACOFFEE">Buy Me a Coffee</option>
+                    <option value="PAYPAL">PayPal</option>
+                    <option value="OUTRO">Outro</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">URL</Label>
+                  <Input
+                    value={donationUrl}
+                    onChange={(e) => setDonationUrl(e.target.value)}
+                    placeholder="https://ko-fi.com/seuperfil"
+                    type="url"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#FF5E5B] focus-visible:border-[#FF5E5B]/50 h-10"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Título (opcional)</Label>
+                  <Input
+                    value={donationTitle}
+                    onChange={(e) => setDonationTitle(e.target.value)}
+                    placeholder="Me apoie ☕"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#FF5E5B] focus-visible:border-[#FF5E5B]/50 h-10"
+                  />
+                </div>
+                <Button onClick={handleAddDonation} disabled={isAdding} className="w-full bg-[#FF5E5B] hover:bg-[#e54d4a] text-white font-semibold h-10 mt-1">
+                  {isAdding ? "Adicionando..." : "Adicionar doação"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "pix" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Tipo de chave</Label>
+                  <select
+                    value={pixKeyType}
+                    onChange={(e) => setPixKeyType(e.target.value as typeof pixKeyType)}
+                    className="w-full h-10 rounded-md bg-white/5 border border-white/10 text-white text-sm px-3 focus:outline-none focus:ring-1 focus:ring-[#32BCAD]"
+                  >
+                    <option value="CPF">CPF</option>
+                    <option value="CNPJ">CNPJ</option>
+                    <option value="EMAIL">E-mail</option>
+                    <option value="TELEFONE">Telefone</option>
+                    <option value="ALEATORIA">Chave aleatória</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Chave PIX</Label>
+                  <Input
+                    value={pixKey}
+                    onChange={(e) => setPixKey(e.target.value)}
+                    placeholder="sua@chave.pix"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#32BCAD] focus-visible:border-[#32BCAD]/50 h-10"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Título (opcional)</Label>
+                  <Input
+                    value={pixTitle}
+                    onChange={(e) => setPixTitle(e.target.value)}
+                    placeholder="Me pague um café ☕"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#32BCAD] focus-visible:border-[#32BCAD]/50 h-10"
+                  />
+                </div>
+                <Button onClick={handleAddPix} disabled={isAdding} className="w-full font-semibold h-10 mt-1 text-white" style={{ backgroundColor: "#32BCAD" }}>
+                  {isAdding ? "Adicionando..." : "Adicionar PIX"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "affiliate" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Título</Label>
+                  <Input
+                    value={affiliateTitle}
+                    onChange={(e) => setAffiliateTitle(e.target.value)}
+                    placeholder="Meu produto afiliado"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#8B5CF6] focus-visible:border-[#8B5CF6]/50 h-10"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">URL destino</Label>
+                  <Input
+                    value={affiliateUrl}
+                    onChange={(e) => setAffiliateUrl(e.target.value)}
+                    placeholder="https://hotmart.com/produto/xyz"
+                    type="url"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#8B5CF6] focus-visible:border-[#8B5CF6]/50 h-10"
+                  />
+                  <p className="text-white/35 text-xs">
+                    A URL real nunca é exposta — visitantes são redirecionados via código curto.
+                  </p>
+                </div>
+                <Button onClick={handleAddAffiliate} disabled={isAdding} className="w-full bg-[#8B5CF6] hover:bg-[#7c3aed] text-white font-semibold h-10 mt-1">
+                  {isAdding ? "Adicionando..." : "Adicionar afiliado 🔒 PRO"}
                 </Button>
               </>
             )}
