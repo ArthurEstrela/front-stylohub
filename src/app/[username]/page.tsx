@@ -10,6 +10,10 @@ import { LinkWidget } from "@/components/public-profile/LinkWidget";
 import { YoutubeWidget } from "@/components/public-profile/YoutubeWidget";
 import { LeadFormWidget } from "@/components/public-profile/LeadFormWidget";
 import { PoweredByFooter } from "@/components/public-profile/PoweredByFooter";
+import { TikTokWidget } from "@/components/public-profile/TikTokWidget";
+import { TwitchWidget } from "@/components/public-profile/TwitchWidget";
+import { SoundCloudWidget } from "@/components/public-profile/SoundCloudWidget";
+import { TwitterWidget } from "@/components/public-profile/TwitterWidget";
 
 // ─── Dynamic metadata ────────────────────────────────────────────────────────
 export async function generateMetadata({
@@ -139,7 +143,7 @@ export default async function PublicProfilePage({
                   />
                 );
               }
-              if (widget.type === "VIDEO" && widget.config.videoId) {
+              if (widget.type === "YOUTUBE" && widget.config.videoId) {
                 return (
                   <YoutubeWidget
                     key={widget.id}
@@ -163,6 +167,31 @@ export default async function PublicProfilePage({
                     />
                   </div>
                 );
+              }
+              if (widget.type === "TIKTOK" && widget.config.videoId) {
+                return <TikTokWidget key={widget.id} videoId={widget.config.videoId} />;
+              }
+              if (widget.type === "TWITCH") {
+                return (
+                  <TwitchWidget
+                    key={widget.id}
+                    channel={widget.config.channel}
+                    clipSlug={widget.config.clipSlug}
+                    isClip={widget.config.isClip ?? false}
+                  />
+                );
+              }
+              if (widget.type === "SOUNDCLOUD" && widget.config.trackUrl) {
+                return (
+                  <SoundCloudWidget
+                    key={widget.id}
+                    trackUrl={widget.config.trackUrl}
+                    compact={widget.config.compact}
+                  />
+                );
+              }
+              if (widget.type === "TWITTER" && widget.config.tweetId) {
+                return <TwitterWidget key={widget.id} tweetId={widget.config.tweetId} />;
               }
               if (widget.type === "LEAD_FORM") {
                 return (

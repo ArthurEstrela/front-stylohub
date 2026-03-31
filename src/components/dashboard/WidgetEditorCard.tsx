@@ -23,14 +23,14 @@ interface WidgetEditorCardProps {
 
 function WidgetIcon({ type }: { type: Widget["type"] }) {
   switch (type) {
-    case "VIDEO":
-      return <Youtube size={16} className="text-red-400" />;
-    case "SPOTIFY":
-      return <Music2 size={16} className="text-green-400" />;
-    case "TEXT":
-      return <Type size={16} className="text-blue-400" />;
-    default:
-      return <Link2 size={16} className="text-stylo-gold" />;
+    case "YOUTUBE":    return <Youtube size={16} className="text-red-400" />;
+    case "SPOTIFY":    return <Music2 size={16} className="text-green-400" />;
+    case "TEXT":       return <Type size={16} className="text-blue-400" />;
+    case "TIKTOK":     return <svg width={16} height={16} viewBox="0 0 24 24" fill="white" className="opacity-70"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.05a8.16 8.16 0 004.77 1.52V7.12a4.85 4.85 0 01-1-.43z"/></svg>;
+    case "TWITCH":     return <svg width={16} height={16} viewBox="0 0 24 24" fill="#9146FF"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>;
+    case "SOUNDCLOUD": return <svg width={16} height={16} viewBox="0 0 24 24" fill="#FF5500"><path d="M1.175 12.225c-.017 0-.033.002-.05.003a.427.427 0 00-.372.287l-.48 1.485.48 1.482c.04.14.168.24.323.24.155 0 .283-.1.323-.24l.543-1.482-.543-1.485a.338.338 0 00-.224-.29zm1.797-.578c-.024 0-.05.003-.073.01a.46.46 0 00-.37.33l-.41 1.76.41 1.755a.456.456 0 00.443.345.456.456 0 00.444-.345l.465-1.755-.465-1.76a.462.462 0 00-.444-.34zm1.87-.164a.55.55 0 00-.548.478l-.35 1.924.35 1.92a.55.55 0 001.096 0l.397-1.92-.397-1.924a.55.55 0 00-.548-.478zm1.898.023a.64.64 0 00-.637.559l-.298 1.9.298 1.896a.636.636 0 001.272 0l.337-1.896-.337-1.9a.637.637 0 00-.635-.559zm1.91-.398a.723.723 0 00-.723.636l-.253 2.298.253 2.3a.724.724 0 001.447 0l.286-2.3-.286-2.298a.724.724 0 00-.724-.636zm5.517 1.88c-.197-2.267-2.046-4.026-4.327-4.026a4.376 4.376 0 00-1.61.308.723.723 0 00-.485.68v7.796c0 .394.32.714.714.714h5.708a2.145 2.145 0 002.143-2.143 2.145 2.145 0 00-2.143-2.143zm2.572 0a.714.714 0 100 1.429.714.714 0 000-1.429z"/></svg>;
+    case "TWITTER":    return <svg width={16} height={16} viewBox="0 0 24 24" fill="white" className="opacity-70"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.633zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>;
+    default:           return <Link2 size={16} className="text-stylo-gold" />;
   }
 }
 
@@ -110,7 +110,7 @@ export function WidgetEditorCard({
             placeholder="Título do link"
             className="w-full bg-transparent text-white text-sm font-medium placeholder:text-white/25 focus:outline-none border-b border-transparent focus:border-white/20 pb-0.5 transition-colors truncate"
           />
-          {(widget.type === "LINK" || widget.type === "VIDEO") && (
+          {(widget.type === "LINK" || widget.type === "YOUTUBE") && (
             <input
               type="text"
               value={url}

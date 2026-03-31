@@ -45,7 +45,7 @@ function MockWidget({ widget, theme }: { widget: Widget; theme: Theme }) {
     );
   }
 
-  if (widget.type === "VIDEO") {
+  if (widget.type === "YOUTUBE") {
     return (
       <div
         className="w-full aspect-video rounded-lg flex items-center justify-center"
@@ -63,9 +63,52 @@ function MockWidget({ widget, theme }: { widget: Widget; theme: Theme }) {
         style={{ backgroundColor: `${theme.primaryColor}15`, border: `1px solid ${theme.primaryColor}30` }}
       >
         <span className="text-xs" style={{ color: theme.primaryColor }}>♫</span>
-        <span className="text-xs truncate" style={{ color: theme.textColor, opacity: 0.7 }}>
-          Spotify
-        </span>
+        <span className="text-xs truncate" style={{ color: theme.textColor, opacity: 0.7 }}>Spotify</span>
+      </div>
+    );
+  }
+
+  if (widget.type === "TIKTOK") {
+    return (
+      <div
+        className="w-full py-2 rounded-lg flex items-center justify-center gap-1.5 px-3"
+        style={{ backgroundColor: `${theme.primaryColor}15`, border: `1px solid ${theme.primaryColor}30` }}
+      >
+        <span className="text-xs" style={{ color: theme.textColor, opacity: 0.7 }}>🎵 TikTok</span>
+      </div>
+    );
+  }
+
+  if (widget.type === "TWITCH") {
+    return (
+      <div
+        className="w-full aspect-video rounded-lg flex items-center justify-center"
+        style={{ backgroundColor: `${theme.primaryColor}15`, border: `1px solid ${theme.primaryColor}30` }}
+      >
+        <span style={{ color: theme.primaryColor }} className="text-xs">▶ Twitch</span>
+      </div>
+    );
+  }
+
+  if (widget.type === "SOUNDCLOUD") {
+    return (
+      <div
+        className="w-full py-2 rounded-lg flex items-center justify-center gap-1.5 px-3"
+        style={{ backgroundColor: `${theme.primaryColor}15`, border: `1px solid ${theme.primaryColor}30` }}
+      >
+        <span className="text-xs" style={{ color: theme.primaryColor }}>♫</span>
+        <span className="text-xs truncate" style={{ color: theme.textColor, opacity: 0.7 }}>SoundCloud</span>
+      </div>
+    );
+  }
+
+  if (widget.type === "TWITTER") {
+    return (
+      <div
+        className="w-full py-2 px-3 rounded-lg"
+        style={{ backgroundColor: `${theme.primaryColor}15`, border: `1px solid ${theme.primaryColor}30` }}
+      >
+        <span className="text-xs" style={{ color: theme.textColor, opacity: 0.7 }}>𝕏 Tweet</span>
       </div>
     );
   }

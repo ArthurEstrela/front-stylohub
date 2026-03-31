@@ -16,8 +16,9 @@ const ContentSecurityPolicy = `
   script-src 'self' 'unsafe-inline' 'unsafe-eval';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
-  img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com;
+  img-src 'self' data: blob: https://res.cloudinary.com https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://pbs.twimg.com https://abs.twimg.com;
   connect-src 'self' ${apiOrigin};
+  frame-src https://www.youtube.com https://open.spotify.com https://www.tiktok.com https://player.twitch.tv https://clips.twitch.tv https://w.soundcloud.com;
   frame-ancestors 'none';
   base-uri 'self';
   form-action 'self';

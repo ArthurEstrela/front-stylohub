@@ -36,8 +36,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  extractTikTokVideoId,
+  extractTwitchInfo,
+  extractSoundCloudUrl,
+  extractTweetId,
+} from "@/lib/embed-extractors";
 
-type ContentType = "link" | "youtube" | "spotify" | "whatsapp" | "form";
+type ContentType = "link" | "youtube" | "spotify" | "whatsapp" | "form" | "tiktok" | "twitch" | "soundcloud" | "twitter";
 
 const CONTENT_TYPES: { id: ContentType; label: string; icon: React.ReactNode; color: string }[] = [
   { id: "link",      label: "Link",       icon: <Link2 size={18} />,         color: "#3B82F6" },
@@ -45,6 +51,10 @@ const CONTENT_TYPES: { id: ContentType; label: string; icon: React.ReactNode; co
   { id: "spotify",   label: "Spotify",    icon: <Music2 size={18} />,        color: "#22C55E" },
   { id: "whatsapp",  label: "WhatsApp",   icon: <MessageCircle size={18} />, color: "#25D366" },
   { id: "form",      label: "Form",       icon: <ClipboardList size={18} />, color: "#D4AF37" },
+  { id: "tiktok",     label: "TikTok",      icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.05a8.16 8.16 0 004.77 1.52V7.12a4.85 4.85 0 01-1-.43z"/></svg>, color: "#010101" },
+  { id: "twitch",     label: "Twitch",      icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>, color: "#9146FF" },
+  { id: "soundcloud", label: "SoundCloud",  icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M1.175 12.225c-.017 0-.033.002-.05.003a.427.427 0 00-.372.287l-.48 1.485.48 1.482c.04.14.168.24.323.24.155 0 .283-.1.323-.24l.543-1.482-.543-1.485a.338.338 0 00-.224-.29zm1.797-.578c-.024 0-.05.003-.073.01a.46.46 0 00-.37.33l-.41 1.76.41 1.755a.456.456 0 00.443.345.456.456 0 00.444-.345l.465-1.755-.465-1.76a.462.462 0 00-.444-.34zm1.87-.164a.55.55 0 00-.548.478l-.35 1.924.35 1.92a.55.55 0 001.096 0l.397-1.92-.397-1.924a.55.55 0 00-.548-.478zm1.898.023a.64.64 0 00-.637.559l-.298 1.9.298 1.896a.636.636 0 001.272 0l.337-1.896-.337-1.9a.637.637 0 00-.635-.559zm1.91-.398a.723.723 0 00-.723.636l-.253 2.298.253 2.3a.724.724 0 001.447 0l.286-2.3-.286-2.298a.724.724 0 00-.724-.636zm5.517 1.88c-.197-2.267-2.046-4.026-4.327-4.026a4.376 4.376 0 00-1.61.308.723.723 0 00-.485.68v7.796c0 .394.32.714.714.714h5.708a2.145 2.145 0 002.143-2.143 2.145 2.145 0 00-2.143-2.143zm2.572 0a.714.714 0 100 1.429.714.714 0 000-1.429z"/></svg>, color: "#FF5500" },
+  { id: "twitter",    label: "Twitter/X",   icon: <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.633zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>, color: "#000000" },
 ];
 
 export default function LinksPage() {
@@ -73,6 +83,22 @@ export default function LinksPage() {
   const [formButtonLabel, setFormButtonLabel] = useState("");
   const [formSuccessMessage, setFormSuccessMessage] = useState("");
   const [formFields, setFormFields] = useState("email");
+
+  // TikTok state
+  const [tikTokUrl, setTikTokUrl] = useState("");
+  const [tikTokIdDetected, setTikTokIdDetected] = useState<string | null>(null);
+
+  // Twitch state
+  const [twitchUrl, setTwitchUrl] = useState("");
+  const [twitchInfoDetected, setTwitchInfoDetected] = useState<ReturnType<typeof extractTwitchInfo>>(null);
+
+  // SoundCloud state
+  const [soundCloudUrl, setSoundCloudUrl] = useState("");
+  const [soundCloudDetected, setSoundCloudDetected] = useState<string | null>(null);
+
+  // Twitter state
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [tweetIdDetected, setTweetIdDetected] = useState<string | null>(null);
 
   const sensors = useSensors(
     // Pointer (mouse/stylus): só arrasta após mover 8px — deixa cliques normais passarem
@@ -134,7 +160,7 @@ export default function LinksPage() {
     setIsAdding(true);
     try {
       const res = await creatorApi.addWidget({
-        type: "VIDEO",
+        type: "YOUTUBE",
         order: sortedWidgets.length,
         videoId: videoId.trim(),
         showControls: true,
@@ -244,6 +270,107 @@ export default function LinksPage() {
     }
   };
 
+  const handleAddTikTok = async () => {
+    if (!tikTokIdDetected) {
+      toast.error("Cole uma URL válida do TikTok.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "TIKTOK",
+        order: sortedWidgets.length,
+        videoId: tikTokIdDetected,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setTikTokUrl("");
+      setTikTokIdDetected(null);
+      toast.success("TikTok adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar TikTok.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddTwitch = async () => {
+    if (!twitchInfoDetected) {
+      toast.error("Cole uma URL válida do Twitch.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "TWITCH",
+        order: sortedWidgets.length,
+        twitchChannel: twitchInfoDetected.channel,
+        twitchClipSlug: twitchInfoDetected.clipSlug,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setTwitchUrl("");
+      setTwitchInfoDetected(null);
+      toast.success("Twitch adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar Twitch.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddSoundCloud = async () => {
+    if (!soundCloudDetected) {
+      toast.error("Cole uma URL válida do SoundCloud.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "SOUNDCLOUD",
+        order: sortedWidgets.length,
+        url: soundCloudDetected,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setSoundCloudUrl("");
+      setSoundCloudDetected(null);
+      toast.success("SoundCloud adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar SoundCloud.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleAddTwitter = async () => {
+    if (!tweetIdDetected) {
+      toast.error("Cole uma URL válida de tweet.");
+      return;
+    }
+    setIsAdding(true);
+    try {
+      const res = await creatorApi.addWidget({
+        type: "TWITTER",
+        order: sortedWidgets.length,
+        twitterTweetId: tweetIdDetected,
+      });
+      addToPreview(res.data);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      setDialogOpen(false);
+      setTwitterUrl("");
+      setTweetIdDetected(null);
+      toast.success("Tweet adicionado!");
+    } catch {
+      toast.error("Erro ao adicionar tweet.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const handleUpdate = async (id: string, data: { title?: string; url?: string }) => {
     try {
       await creatorApi.updateWidget(id, data);
@@ -337,7 +464,16 @@ export default function LinksPage() {
       )}
 
       {/* Add dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setActiveType("link"); }}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setActiveType("link");
+          setTikTokUrl(""); setTikTokIdDetected(null);
+          setTwitchUrl(""); setTwitchInfoDetected(null);
+          setSoundCloudUrl(""); setSoundCloudDetected(null);
+          setTwitterUrl(""); setTweetIdDetected(null);
+        }
+      }}>
         <DialogContent className="bg-[#111113] border border-white/10 text-white w-[calc(100vw-2rem)] max-w-md mx-auto p-0 overflow-hidden rounded-2xl">
           <DialogHeader className="px-5 pt-5 pb-4 border-b border-white/8">
             <DialogTitle className="text-white font-semibold text-base">Adicionar conteúdo</DialogTitle>
@@ -523,6 +659,111 @@ export default function LinksPage() {
                 </div>
                 <Button onClick={handleAddForm} disabled={isAdding} className="w-full btn-gold-glow bg-stylo-gold hover:bg-stylo-gold-hover text-black font-semibold h-10 mt-1">
                   {isAdding ? "Adicionando..." : "Adicionar formulário"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "tiktok" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Link do vídeo</Label>
+                  <Input
+                    value={tikTokUrl}
+                    onChange={(e) => {
+                      setTikTokUrl(e.target.value);
+                      setTikTokIdDetected(extractTikTokVideoId(e.target.value));
+                    }}
+                    placeholder="https://www.tiktok.com/@user/video/..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-[#010101] focus-visible:border-[#010101]/50 h-10"
+                  />
+                  {tikTokUrl && (
+                    <p className={`text-xs ${tikTokIdDetected ? "text-green-400" : "text-red-400"}`}>
+                      {tikTokIdDetected ? `✓ ID detectado: ${tikTokIdDetected}` : "URL inválida para TikTok"}
+                    </p>
+                  )}
+                </div>
+                <Button onClick={handleAddTikTok} disabled={isAdding || !tikTokIdDetected} className="w-full font-semibold h-10 mt-1 text-white bg-black hover:bg-zinc-900">
+                  {isAdding ? "Adicionando..." : "Adicionar TikTok"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "twitch" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Link do canal ou clip</Label>
+                  <Input
+                    value={twitchUrl}
+                    onChange={(e) => {
+                      setTwitchUrl(e.target.value);
+                      setTwitchInfoDetected(extractTwitchInfo(e.target.value));
+                    }}
+                    placeholder="https://www.twitch.tv/channelname"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 h-10"
+                    style={{ "--tw-ring-color": "#9146FF" } as React.CSSProperties}
+                  />
+                  {twitchUrl && (
+                    <p className={`text-xs ${twitchInfoDetected ? "text-green-400" : "text-red-400"}`}>
+                      {twitchInfoDetected
+                        ? twitchInfoDetected.isClip
+                          ? `✓ Clip: ${twitchInfoDetected.clipSlug}`
+                          : `✓ Canal: ${twitchInfoDetected.channel}`
+                        : "URL inválida para Twitch"}
+                    </p>
+                  )}
+                </div>
+                <Button onClick={handleAddTwitch} disabled={isAdding || !twitchInfoDetected} className="w-full font-semibold h-10 mt-1 text-white" style={{ background: "#9146FF" }}>
+                  {isAdding ? "Adicionando..." : "Adicionar Twitch"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "soundcloud" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Link da faixa ou playlist</Label>
+                  <Input
+                    value={soundCloudUrl}
+                    onChange={(e) => {
+                      setSoundCloudUrl(e.target.value);
+                      setSoundCloudDetected(extractSoundCloudUrl(e.target.value));
+                    }}
+                    placeholder="https://soundcloud.com/artista/faixa"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 h-10"
+                  />
+                  {soundCloudUrl && (
+                    <p className={`text-xs ${soundCloudDetected ? "text-green-400" : "text-red-400"}`}>
+                      {soundCloudDetected ? "✓ URL válida" : "URL inválida para SoundCloud"}
+                    </p>
+                  )}
+                </div>
+                <Button onClick={handleAddSoundCloud} disabled={isAdding || !soundCloudDetected} className="w-full font-semibold h-10 mt-1 text-white" style={{ background: "#FF5500" }}>
+                  {isAdding ? "Adicionando..." : "Adicionar SoundCloud"}
+                </Button>
+              </>
+            )}
+
+            {activeType === "twitter" && (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-white/60 text-xs font-medium uppercase tracking-wide">Link do tweet</Label>
+                  <Input
+                    value={twitterUrl}
+                    onChange={(e) => {
+                      setTwitterUrl(e.target.value);
+                      setTweetIdDetected(extractTweetId(e.target.value));
+                    }}
+                    placeholder="https://x.com/user/status/..."
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/25 h-10"
+                  />
+                  {twitterUrl && (
+                    <p className={`text-xs ${tweetIdDetected ? "text-green-400" : "text-red-400"}`}>
+                      {tweetIdDetected ? `✓ Tweet ID: ${tweetIdDetected}` : "URL inválida — use o link completo do tweet"}
+                    </p>
+                  )}
+                </div>
+                <Button onClick={handleAddTwitter} disabled={isAdding || !tweetIdDetected} className="w-full font-semibold h-10 mt-1 text-white bg-black hover:bg-zinc-900">
+                  {isAdding ? "Adicionando..." : "Adicionar Tweet"}
                 </Button>
               </>
             )}

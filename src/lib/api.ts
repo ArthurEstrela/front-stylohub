@@ -10,7 +10,7 @@ export const api = axios.create({
 
 // Silent refresh on 401: try /api/auth/refresh once, then logout
 let isRefreshing = false;
-let pendingQueue: Array<{ resolve: () => void; reject: (e: unknown) => void }> = [];
+let pendingQueue: Array<{ resolve: (value?: unknown) => void; reject: (e: unknown) => void }> = [];
 
 api.interceptors.response.use(
   (res) => res,
