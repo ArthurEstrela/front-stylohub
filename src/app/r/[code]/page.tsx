@@ -14,7 +14,14 @@ export default async function AffiliatePage({ params }: Props) {
 
   if (res.ok) {
     const { url } = await res.json() as { url: string };
-    redirect(url);
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+        redirect(url);
+      }
+    } catch {
+      // url is not a valid absolute URL — fall through to 404
+    }
   }
 
   // 404 — code not found

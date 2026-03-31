@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import type { WidgetConfig } from "@/types/widget";
 
@@ -18,12 +18,20 @@ interface Props {
 
 export default function PixWidget({ config }: Props) {
   const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleCopy = async () => {
     if (!config.pixKey) return;
     await navigator.clipboard.writeText(config.pixKey);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
   const keyLabel = config.pixKeyType ? PIX_KEY_LABELS[config.pixKeyType] ?? config.pixKeyType : "PIX";
