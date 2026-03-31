@@ -14,6 +14,9 @@ import { TikTokWidget } from "@/components/public-profile/TikTokWidget";
 import { TwitchWidget } from "@/components/public-profile/TwitchWidget";
 import { SoundCloudWidget } from "@/components/public-profile/SoundCloudWidget";
 import { TwitterWidget } from "@/components/public-profile/TwitterWidget";
+import DonationLinkWidget from "@/components/public-profile/DonationLinkWidget";
+import PixWidget from "@/components/public-profile/PixWidget";
+import AffiliateLinkWidget from "@/components/public-profile/AffiliateLinkWidget";
 
 // ─── Dynamic metadata ────────────────────────────────────────────────────────
 export async function generateMetadata({
@@ -192,6 +195,15 @@ export default async function PublicProfilePage({
               }
               if (widget.type === "TWITTER" && widget.config.tweetId) {
                 return <TwitterWidget key={widget.id} tweetId={widget.config.tweetId} />;
+              }
+              if (widget.type === "DONATION_LINK") {
+                return <DonationLinkWidget key={widget.id} config={widget.config} />;
+              }
+              if (widget.type === "PIX") {
+                return <PixWidget key={widget.id} config={widget.config} />;
+              }
+              if (widget.type === "AFFILIATE_LINK") {
+                return <AffiliateLinkWidget key={widget.id} config={widget.config} />;
               }
               if (widget.type === "LEAD_FORM") {
                 return (
