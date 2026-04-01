@@ -247,7 +247,7 @@ export default async function PublicProfilePage({
                   ...(safeProfile.avatarUrl ? { image: safeProfile.avatarUrl } : {}),
                   url: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${safeProfile.username}`,
                 },
-              }),
+              }).replace(/</g, "\\u003c"),
             }}
           />
         </div>
