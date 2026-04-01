@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { fetchProfile } from "@/lib/fetchProfile";
 
 export const runtime = "edge";
+export const revalidate = 60;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { fetchProfile } from "@/lib/fetchProfile";
 import type { Widget } from "@/types/widget";
 
+const DOMAIN = process.env.NEXT_PUBLIC_DOMAIN ?? "stylohub.app";
+
 import { ThemeRenderer } from "@/components/public-profile/ThemeRenderer";
 import { LinkWidget } from "@/components/public-profile/LinkWidget";
 import { YoutubeWidget } from "@/components/public-profile/YoutubeWidget";
@@ -38,12 +40,12 @@ export async function generateMetadata({
     title,
     description,
     alternates: {
-      canonical: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${username}`,
+      canonical: `https://${DOMAIN}/${username}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${username}`,
+      url: `https://${DOMAIN}/${username}`,
       siteName: "Stylohub",
       type: "profile",
       // No `images` field here — opengraph-image.tsx handles it automatically
@@ -86,7 +88,7 @@ export default async function PublicProfilePage({
           <div className="flex justify-center mb-5">
             {safeProfile.avatarUrl ? (
               <Image
-                src={safeProfile.avatarUrl!}
+                src={safeProfile.avatarUrl}
                 alt={`@${safeProfile.username}`}
                 width={112}
                 height={112}
@@ -245,7 +247,7 @@ export default async function PublicProfilePage({
                   alternateName: `@${safeProfile.username}`,
                   ...(safeProfile.bio ? { description: safeProfile.bio } : {}),
                   ...(safeProfile.avatarUrl ? { image: safeProfile.avatarUrl } : {}),
-                  url: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${safeProfile.username}`,
+                  url: `https://${DOMAIN}/${safeProfile.username}`,
                 },
               }).replace(/</g, "\\u003c"),
             }}
