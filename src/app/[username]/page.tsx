@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import type { Metadata } from "next";
 
+import { fetchProfile } from "@/lib/fetchProfile";
 import { publicApi } from "@/lib/api";
-import type { Profile } from "@/types/profile";
 import type { Widget } from "@/types/widget";
 
 import { ThemeRenderer } from "@/components/public-profile/ThemeRenderer";
@@ -25,33 +26,35 @@ export async function generateMetadata({
   params: Promise<{ username: string }>;
 }): Promise<Metadata> {
   const { username } = await params;
-  try {
-    const res = await publicApi.getProfile(username);
-    const profile: Profile = res.data;
-    const title = profile.seoTitle || `@${profile.username} | Stylohub`;
-    const description = profile.seoDescription || profile.bio || `Todos os links de @${profile.username} em um só lugar. Acessa agora!`;
-    const imageUrl = profile.avatarUrl ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.username)}&background=D4AF37&color=000&size=400&bold=true`;
-    return {
+  const profile = await fetchProfile(username);
+  if (!profile) return { title: "Perfil não encontrado | Stylohub" };
+
+  const title = profile.seoTitle || `@${profile.username} | Stylohub`;
+  const description =
+    profile.seoDescription ||
+    profile.bio ||
+    `Todos os links de @${profile.username} em um só lugar. Acessa agora!`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${username}`,
+    },
+    openGraph: {
       title,
       description,
-      openGraph: {
-        title,
-        description,
-        url: `https://stylohub.app/${username}`,
-        siteName: "Stylohub",
-        images: [{ url: imageUrl, width: 400, height: 400, alt: `Avatar de @${profile.username}` }],
-        type: "profile",
-      },
-      twitter: {
-        card: "summary",
-        title,
-        description,
-        images: [imageUrl],
-      },
-    };
-  } catch {
-    return { title: "Perfil não encontrado | Stylohub" };
-  }
+      url: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${username}`,
+      siteName: "Stylohub",
+      type: "profile",
+      // No `images` field here — opengraph-image.tsx handles it automatically
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
 }
 
 // ─── Page component ───────────────────────────────────────────────────────────
@@ -61,75 +64,73 @@ export default async function PublicProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
+  const profile = await fetchProfile(username);
+  if (!profile) notFound();
 
-  let profile: Profile;
-  try {
-    const res = await publicApi.getProfile(username);
-    profile = res.data;
-  } catch {
-    notFound();
-  }
+  // TypeScript may not know notFound() throws — assert non-null:
+  const safeProfile = profile!;
 
-  const sortedWidgets = [...profile.widgets]
+  const sortedWidgets = [...safeProfile.widgets]
     .filter((w) => w.isActive)
     .sort((a, b) => a.orderIndex - b.orderIndex);
 
-  const isProUser = profile.plan === "PRO";
+  const isProUser = safeProfile.plan === "PRO";
 
   return (
     <>
       {/* Inject theme CSS variables and body background */}
-      <ThemeRenderer theme={profile.theme} />
+      <ThemeRenderer theme={safeProfile.theme} />
 
       <main className="min-h-screen flex flex-col items-center pt-12 pb-10 px-4">
         <div className="w-full max-w-sm">
           {/* Avatar */}
           <div className="flex justify-center mb-5">
-            {profile.avatarUrl ? (
-              <img
-                src={profile.avatarUrl}
-                alt={`@${profile.username}`}
+            {safeProfile.avatarUrl ? (
+              <Image
+                src={safeProfile.avatarUrl!}
+                alt={`@${safeProfile.username}`}
                 width={112}
                 height={112}
+                priority
                 className="w-28 h-28 rounded-full object-cover border-[3px]"
-                style={{ borderColor: `${profile.theme.primaryColor}70` }}
+                style={{ borderColor: `${safeProfile.theme.primaryColor}70` }}
               />
             ) : (
               <div
                 className="w-28 h-28 rounded-full border-[3px] flex items-center justify-center text-3xl font-bold"
                 style={{
-                  borderColor: `${profile.theme.primaryColor}70`,
-                  backgroundColor: `${profile.theme.primaryColor}20`,
-                  color: profile.theme.primaryColor,
+                  borderColor: `${safeProfile.theme.primaryColor}70`,
+                  backgroundColor: `${safeProfile.theme.primaryColor}20`,
+                  color: safeProfile.theme.primaryColor,
                 }}
               >
-                {profile.username.charAt(0).toUpperCase()}
+                {safeProfile.username.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
 
           {/* Name & bio */}
           <div className="text-center mb-8">
-            {profile.displayName && (
+            {safeProfile.displayName && (
               <h1
                 className="font-bold text-lg mb-0.5"
-                style={{ color: profile.theme.textColor }}
+                style={{ color: safeProfile.theme.textColor }}
               >
-                {profile.displayName}
+                {safeProfile.displayName}
               </h1>
             )}
             <p
-              className={`text-sm opacity-50 ${profile.displayName ? "mb-1" : "font-bold text-lg mb-1"}`}
-              style={{ color: profile.theme.textColor }}
+              className={`text-sm opacity-50 ${safeProfile.displayName ? "mb-1" : "font-bold text-lg mb-1"}`}
+              style={{ color: safeProfile.theme.textColor }}
             >
-              @{profile.username}
+              @{safeProfile.username}
             </p>
-            {profile.bio && (
+            {safeProfile.bio && (
               <p
                 className="text-sm leading-snug opacity-70 max-w-xs mx-auto"
-                style={{ color: profile.theme.textColor }}
+                style={{ color: safeProfile.theme.textColor }}
               >
-                {profile.bio}
+                {safeProfile.bio}
               </p>
             )}
           </div>
@@ -142,7 +143,7 @@ export default async function PublicProfilePage({
                   <LinkWidget
                     key={widget.id}
                     widget={widget}
-                    username={profile.username}
+                    username={safeProfile.username}
                   />
                 );
               }
@@ -210,7 +211,7 @@ export default async function PublicProfilePage({
                   <LeadFormWidget
                     key={widget.id}
                     widget={widget}
-                    username={profile.username}
+                    username={safeProfile.username}
                   />
                 );
               }
@@ -219,7 +220,7 @@ export default async function PublicProfilePage({
                   <p
                     key={widget.id}
                     className="text-center text-sm opacity-70 py-2"
-                    style={{ color: profile.theme.textColor }}
+                    style={{ color: safeProfile.theme.textColor }}
                   >
                     {widget.config.text}
                   </p>
@@ -231,6 +232,25 @@ export default async function PublicProfilePage({
 
           {/* Footer */}
           <PoweredByFooter removable={isProUser} />
+
+          {/* JSON-LD structured data */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "ProfilePage",
+                mainEntity: {
+                  "@type": "Person",
+                  name: safeProfile.displayName || safeProfile.username,
+                  alternateName: `@${safeProfile.username}`,
+                  ...(safeProfile.bio ? { description: safeProfile.bio } : {}),
+                  ...(safeProfile.avatarUrl ? { image: safeProfile.avatarUrl } : {}),
+                  url: `https://${process.env.NEXT_PUBLIC_DOMAIN}/${safeProfile.username}`,
+                },
+              }),
+            }}
+          />
         </div>
       </main>
     </>
